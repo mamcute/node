@@ -2,7 +2,6 @@ const asyncHandler = require("express-async-handler");
 const bcypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
-const { use } = require("../routes/contactRoutes");
 
 //@desc Register user
 // @route Post /api/users/register
@@ -65,9 +64,9 @@ const loginUser = asyncHandler(async (req, res) => {
       { expiresIn: "15m" }
     );
     res.status(200).json({ accessToken });
-  }else{
+  } else {
     res.status(401);
-    throw new Error('email or password is not valid')
+    throw new Error("email or password is not valid");
   }
   res.json({ message: "Login user" });
 });
