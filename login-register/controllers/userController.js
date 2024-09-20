@@ -75,12 +75,12 @@ const loginUser = asyncHandler(async (req, res) => {
     if (await bcrypt.compare(password, user.password)) {
       // Đăng nhập thành công, reset số lần nhập sai
       redisClient.del(attemptKey);
-      const accessToken = jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECERT, {
-        expiresIn: ms("15m"),
+      const accessToken = jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "30s",
       });
       const refreshToken = jwt.sign(
         userInfo,
-        process.env.REFRESH_TOKEN_SECERT,
+        process.env.REFRESH_TOKEN_SECRET,
         { expiresIn: ms("1 day") }
       );
       /**
