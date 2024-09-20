@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const redisClient = require("../config/redisClient");
+// ms đẻ chuyển sang tất cả về mili giây
+const ms = require('ms')
 //@desc Register user
 // @route Post /api/users/register
 //@access public
@@ -28,6 +30,7 @@ const registerUser = asyncHandler(async (req, res) => {
     password: hashedPassword,
   });
   if (newUser) {
+    // redisClient.set("abc", "123");
     res.status(201).json({ _id: newUser.id, email: newUser.email });
   } else {
     res.status(400);
@@ -40,7 +43,6 @@ const registerUser = asyncHandler(async (req, res) => {
 //@access private
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-
   if (!email || !password) {
     res.status(400);
     throw new Error("All fields are mandatory!");
@@ -64,36 +66,51 @@ const loginUser = asyncHandler(async (req, res) => {
         .status(403)
         .json({ message: "Account locked. Try again later." });
     }
-
+    const userInfo = {
+      username: user.username,
+      email: user.email,
+      id: user.id,
+    };
     // So sánh mật khẩu với mật khẩu đã hash
     if (await bcrypt.compare(password, user.password)) {
       // Đăng nhập thành công, reset số lần nhập sai
       redisClient.del(attemptKey);
-      const accessToken = jwt.sign(
-        {
-          user: {
-            username: user.username,
-            email: user.email,
-            id: user.id,
-          },
-        },
-        process.env.ACCESS_TOKEN_SECERT,
-        { expiresIn: "15m" }
+      const accessToken = jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECERT, {
+        expiresIn: ms("15m"),
+      });
+      const refreshToken = jwt.sign(
+        userInfo,
+        process.env.REFRESH_TOKEN_SECERT,
+        { expiresIn: ms("1 day") }
       );
-      return res.status(200).json({ accessToken });
+      /**
+       * Xử lý trường hợp trả về httpOnly Cookie cho phía Client
+       * maxAge: thời gian sống của Cookie tính theo mili giây để tối đa 14 ngày. Cái này là thời gian sống của Cookie
+       */
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: ms("7 days"),
+      });
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: ms("7 days"),
+      });
+       return res.status(200).json({ ...userInfo, accessToken, refreshToken });
     } else {
-      // Nếu mật khẩu không đúng
-      redisClient.incr(attemptKey, (err, attempts) => {
+      // Nếu mật khẩu không đúng, redisClient.incr de tang so lan sai
+      await redisClient.incr(attemptKey, (err, attempts) => {
         if (attempts >= 5) {
           // Khóa tài khoản trong 20 phút sau 5 lần nhập sai
           redisClient.setex(lockKey, 1200, true); // 1200 giây (20 phút)
           redisClient.set(attemptKey, 0); // Reset số lần nhập sai
-          return res
-            .status(403)
-            .json({
-              message:
-                "Account locked for 20 minutes due to multiple failed attempts.",
-            });
+          return res.status(403).json({
+            message:
+              "Account locked for 20 minutes due to multiple failed attempts.",
+          });
         }
 
         return res

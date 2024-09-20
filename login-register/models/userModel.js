@@ -2,11 +2,6 @@ const mongoose = require("mongoose");
 
 const userSchema = mongoose.Schema(
   {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      require: true,
-      ref: "User",
-    },
     username: {
       type: String,
       require: [true, "Please add the user name"],
@@ -20,7 +15,14 @@ const userSchema = mongoose.Schema(
       type: String,
       require: [true, "Please add the user password"],
     },
+    products: {
+      // moi quan he 1-n
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Product",
+      default: []
+    },
   },
+  // hien thi time trong database
   {
     timestamps: true,
   }
