@@ -3,12 +3,15 @@ const bcrypt = require("bcrypt");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const redisClient = require("../config/redisClient");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 // ms đẻ chuyển sang tất cả về mili giây
-const ms = require('ms')
+const ms = require("ms");
 //@desc Register user
 // @route Post /api/users/register
 //@access public
 // boc asyncHandler de thay khoi try catch
+
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
@@ -81,7 +84,7 @@ const loginUser = asyncHandler(async (req, res) => {
       const refreshToken = jwt.sign(
         userInfo,
         process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: ms("1 day") }
+        { expiresIn: "10d" }
       );
       /**
        * Xử lý trường hợp trả về httpOnly Cookie cho phía Client
@@ -99,7 +102,7 @@ const loginUser = asyncHandler(async (req, res) => {
         sameSite: "none",
         maxAge: ms("7 days"),
       });
-       return res.status(200).json({ ...userInfo, accessToken, refreshToken });
+      return res.status(200).json({ ...userInfo, accessToken, refreshToken });
     } else {
       // Nếu mật khẩu không đúng, redisClient.incr de tang so lan sai
       await redisClient.incr(attemptKey, (err, attempts) => {
@@ -121,4 +124,68 @@ const loginUser = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { registerUser, loginUser };
+const forgotPasswordMail = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ message: "Not found user" });
+  }
+  //tao ma 6 ki tu bang crypto.randomBytes(6).toString('hex')
+  // const codeVerify = crypto.randomBytes(3).toString("hex");
+  const codeVerify = Math.floor(100000 + Math.random() * 900000).toString();
+  user.pin_code = codeVerify;
+  await user.save();
+  //luu ma len redis
+  // redisClient.set(`reset:${user.id}`,codeVerify)
+  // config mail de gui ma
+  const transport = nodemailer.createTransport({
+    service:'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.PASSWORD_USER,
+    },
+  });
+  // thiet lap doi tuong gui va noi dung gui
+  const mainOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Code to verify",
+    text: `Your code to reset password is: ${codeVerify}`,
+  };
+  //gui code
+  transport.sendMail(mainOptions, (error) => {
+    if (error) {
+      return res.status(500).json({ message: `${error} `   });
+    } else {
+      return res.status(200).json({ message: "Sent mail successfully" });
+    }
+  });
+});
+
+const resetPasswordWithCode = async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+    const user = await User.findOne({ email });
+
+  // const codeVerify = `reset:${user.id}`;
+  // redisClient.get(codeVerify,  async (error, codeRedis) => {
+    if (!user || user.pin_code !== code) {
+      return res.status(400).json({ message: "Code verify wrong!" });
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.pin_code = undefined;
+    await user.save();
+    //  redisClient.del(codeVerify);
+    return res.status(200).json({ message: "Updated password successfully!" });
+  } catch (error) {
+    return res.status(500).json({ error: error.message })
+  }
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  forgotPasswordMail,
+  resetPasswordWithCode,
+};

@@ -15,6 +15,7 @@ const userSchema = mongoose.Schema(
       type: String,
       require: [true, "Please add the user password"],
     },
+    pin_code: String,
     products: {
       // moi quan he 1-n
       type: [mongoose.Schema.Types.ObjectId],
