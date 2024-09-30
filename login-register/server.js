@@ -1,11 +1,14 @@
-const express = require("express");
-const connectDb = require("./config/dbConnection");
-const dotenv = require("dotenv").config();
-const errorHandler = require("./middlewares/errorHandler");
-// const session = require("express-session");
-// const redisClient = require("./config/redisClient"); // Kết nối đến Redis
-// const RedisStore = require("connect-redis")(session); // Lưu trữ session trong Redis
-const routers = require("./routes")
+import express from "express";
+import connectDb from "./config/dbConnection.js";
+import dotenv from "dotenv";
+import errorHandler from "./middlewares/errorHandler.js";
+// import const session from "express-session"
+// import const redisClient from "./config/redisClient"); // Kết nối đến Red
+// import const RedisStore from "connect-redis")(session); // Lưu trữ session trong Red
+import routers from "./routes.js";
+
+dotenv.config();
+
 connectDb(); // Kết nối database
 const app = express();
 

@@ -1,12 +1,13 @@
-const asyncHandler = require("express-async-handler");
-const bcrypt = require("bcrypt");
-const User = require("../models/userModel");
-const jwt = require("jsonwebtoken");
-const redisClient = require("../config/redisClient");
-const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+import asyncHandler from "express-async-handler";
+import bcrypt from "bcrypt";
+import User from "../models/userModel";
+import jwt from "jsonwebtoken";
+import redisClient from "../config/redisClient";
+// import crypto from "crypto"
+import nodemailer from "nodemailer";
 // ms đẻ chuyển sang tất cả về mili giây
-const ms = require("ms");
+import ms from "ms";
+import { StatusCodes } from "http-status-codes";
 //@desc Register user
 // @route Post /api/users/register
 //@access public
@@ -79,7 +80,7 @@ const loginUser = asyncHandler(async (req, res) => {
       // Đăng nhập thành công, reset số lần nhập sai
       redisClient.del(attemptKey);
       const accessToken = jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "30s",
+        expiresIn: "2m",
       });
       const refreshToken = jwt.sign(
         userInfo,
@@ -139,7 +140,7 @@ const forgotPasswordMail = asyncHandler(async (req, res) => {
   // redisClient.set(`reset:${user.id}`,codeVerify)
   // config mail de gui ma
   const transport = nodemailer.createTransport({
-    service:'gmail',
+    service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.PASSWORD_USER,
@@ -155,7 +156,7 @@ const forgotPasswordMail = asyncHandler(async (req, res) => {
   //gui code
   transport.sendMail(mainOptions, (error) => {
     if (error) {
-      return res.status(500).json({ message: `${error} `   });
+      return res.status(500).json({ message: `${error} ` });
     } else {
       return res.status(200).json({ message: "Sent mail successfully" });
     }
@@ -167,8 +168,8 @@ const resetPasswordWithCode = async (req, res) => {
     const { email, code, newPassword } = req.body;
     const user = await User.findOne({ email });
 
-  // const codeVerify = `reset:${user.id}`;
-  // redisClient.get(codeVerify,  async (error, codeRedis) => {
+    // const codeVerify = `reset:${user.id}`;
+    // redisClient.get(codeVerify,  async (error, codeRedis) => {
     if (!user || user.pin_code !== code) {
       return res.status(400).json({ message: "Code verify wrong!" });
     }
@@ -179,13 +180,43 @@ const resetPasswordWithCode = async (req, res) => {
     //  redisClient.del(codeVerify);
     return res.status(200).json({ message: "Updated password successfully!" });
   } catch (error) {
-    return res.status(500).json({ error: error.message })
+    return res.status(500).json({ error: error.message });
   }
 };
 
-module.exports = {
+const resetPasswordWithOldPassword = async (req, res) => {
+  try {
+    const sadasd = "";
+  } catch (error) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: error.message });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findOne({ email: req.user.email });
+    if (await bcrypt.compare(currentPassword, user.password)) {
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await user.save();
+      return res
+        .status(200)
+        .json({ message: "Changed password successfully!" });
+    } else {
+      return res.status(400).json({ message: "Password wrong!" });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: `${error}` });
+  }
+};
+
+export default {
   registerUser,
   loginUser,
   forgotPasswordMail,
   resetPasswordWithCode,
+  changePassword,
 };

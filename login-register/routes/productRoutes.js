@@ -1,8 +1,11 @@
-const express = require('express')
-const {createProduct} = require('../controllers/productController')
-const validateTokenHandler = require('../middlewares/validaTokenHandler')
+// const express = require('express')
+import express from "express";
+import {createProduct} from "../controllers/productController"
+// const {createProduct} = require('../controllers/productController')
+// const validateTokenHandler = require('../middlewares/validaTokenHandler')
+import { validateToken } from "../middlewares/verifyHandler";
 const router = express.Router();
 
-router.route('/').post(validateTokenHandler,createProduct);
+router.route('/').post(validateToken,createProduct);
  
-module.exports = router
+export default router;

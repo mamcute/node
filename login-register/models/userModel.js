@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const userSchema = mongoose.Schema(
   {
@@ -20,7 +20,12 @@ const userSchema = mongoose.Schema(
       // moi quan he 1-n
       type: [mongoose.Schema.Types.ObjectId],
       ref: "Product",
-      default: []
+      default: [],
+    },
+    recent_passwords: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "RecentPassword",
+      default: [],
     },
   },
   // hien thi time trong database
@@ -28,4 +33,5 @@ const userSchema = mongoose.Schema(
     timestamps: true,
   }
 );
-module.exports = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+export default User;

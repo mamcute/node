@@ -1,12 +1,15 @@
+import express from "express";
+import { validateToken } from "../middlewares/verifyHandler.js";
+import userController from "../controllers/userController.js";
 
-const express = require("express");
-const { registerUser, loginUser, forgotPasswordMail, resetPasswordWithCode } = require("../controllers/userController");
-// const validateToken = require("../middleware/validateTokenHandler");
 const router = express.Router();
 
-router.route("/register").post(registerUser);
-router.route("/login").post(loginUser);
-router.route("/send-email").post(forgotPasswordMail);
-router.route("/reset-password").post(resetPasswordWithCode);
+router.route("/register").post(userController.registerUser);
+router.route("/login").post(userController.loginUser);
+router.route("/send-email").post(userController.forgotPasswordMail);
+router.route("/reset-password").post(userController.resetPasswordWithCode);
+router
+  .route("/change-password")
+  .put(validateToken, userController.changePassword);
 
-module.exports = router;
+export default router;

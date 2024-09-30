@@ -1,5 +1,6 @@
-const mongoose = require("mongoose");
-const Product = mongoose.Schema(
+import mongoose from "mongoose";
+
+const productSchema = mongoose.Schema(
   {
     product_name: {
       type: String,
@@ -14,7 +15,6 @@ const Product = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       require: true,
       ref: "User",
-      
     },
   },
   {
@@ -22,4 +22,6 @@ const Product = mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Product", Product);
+const Product = mongoose.model("Product", productSchema);
+
+export default Product;

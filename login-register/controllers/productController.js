@@ -1,7 +1,7 @@
-const Product = require("../models/productModel");
-const asyncHandler = require("express-async-handler");
-const User = require("../models/userModel");
-const createProduct = asyncHandler(async (req, res) => {
+import expressAsyncHandler from "express-async-handler";
+import Product from "../models/productModel";
+import User from "../models/userModel";
+const createProduct = expressAsyncHandler(async (req, res) => {
   const { product_name, product_price, product_description } = req.body;
   if (!product_name || !product_price || !product_description) {
     res.status(400);
@@ -16,7 +16,7 @@ const createProduct = asyncHandler(async (req, res) => {
   const updateUser = await User.findOneAndUpdate(
     { _id: req.user.id },
     { $push: { products: newProduct._id } },
-    {new:true}
+    { new: true }
   );
   if (!updateUser) {
     res.status(500);
@@ -27,4 +27,4 @@ const createProduct = asyncHandler(async (req, res) => {
     .json({ message: "Created product successfully!", data: newProduct });
 });
 
-module.exports = { createProduct };
+export default { createProduct };
