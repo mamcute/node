@@ -1,11 +1,11 @@
 // const express = require('express')
 import express from "express";
-import {createProduct} from "../controllers/productController"
+import productController from "../controllers/productController.js"
 // const {createProduct} = require('../controllers/productController')
 // const validateTokenHandler = require('../middlewares/validaTokenHandler')
-import { validateToken } from "../middlewares/verifyHandler";
+import { validateToken } from "../middlewares/verifyHandler.js";
 const router = express.Router();
 
-router.route('/').post(validateToken,createProduct);
+router.route('/').post(validateToken,productController.createProduct);
  
 export default router;

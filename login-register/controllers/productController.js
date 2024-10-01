@@ -1,6 +1,6 @@
 import expressAsyncHandler from "express-async-handler";
-import Product from "../models/productModel";
-import User from "../models/userModel";
+import Product from "../models/productModel.js";
+import User from "../models/userModel.js";
 const createProduct = expressAsyncHandler(async (req, res) => {
   const { product_name, product_price, product_description } = req.body;
   if (!product_name || !product_price || !product_description) {

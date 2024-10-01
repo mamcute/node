@@ -1,8 +1,8 @@
 import asyncHandler from "express-async-handler";
 import bcrypt from "bcrypt";
-import User from "../models/userModel";
+import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
-import redisClient from "../config/redisClient";
+import redisClient from "../config/redisClient.js";
 // import crypto from "crypto"
 import nodemailer from "nodemailer";
 // ms đẻ chuyển sang tất cả về mili giây

@@ -5,7 +5,7 @@ import errorHandler from "./middlewares/errorHandler.js";
 // import const session from "express-session"
 // import const redisClient from "./config/redisClient"); // Kết nối đến Red
 // import const RedisStore from "connect-redis")(session); // Lưu trữ session trong Red
-import routers from "./routes.js";
+import routes from "./routes/index.js"
 
 dotenv.config();
 
@@ -17,7 +17,7 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 
 // Định tuyến người dùng
-app.use("/api", routers);
+app.use("/api", routes);
 
 app.use(errorHandler); // Xử lý lỗi
 

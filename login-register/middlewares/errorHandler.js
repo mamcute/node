@@ -1,4 +1,4 @@
-import constants from "../constants";
+import {constants} from "../constants.js"
 const errorHandler = (err, req, res, next) => {
   // Thong bao cac loi
   const statusCode = res.statusCode ? res.statusCode : 500;
